@@ -28,7 +28,7 @@ def get_ips(packet):
 def get_ip_domain(packet):
     AP_IP = packet[DNSRR][0].rdata
     print(f"The  ip is : {AP_IP}")
-    print(f"Sent DNS response for {domain_name}: {domain_name}")
+    print(f"Sent DNS response for {domain_name} -> {AP_IP}")
 
 
 # Set up DHCP discover packet
