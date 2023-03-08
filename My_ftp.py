@@ -1,3 +1,5 @@
+import pwd
+
 from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.dns import DNS, DNSQR, DNSRR
@@ -36,46 +38,31 @@ def put():
     f = open("ftp_file/" + name, "wb")
     f.write(file_data)
     f.close()
+
+    # set the path of the file you want to change the permissions of
+    file_path = "ftp_file/" + name
+
+    # set the desired permissions for the file (in octal format)
+    new_permissions = 0o777
+
+    # use the os module to change the permissions of the file
+    os.chmod(file_path, new_permissions)
+
+    # set the username of the new owner of the file
+    new_owner = 'nisim'
+
+    # get the uid of the new owner
+    new_owner_uid = pwd.getpwnam(new_owner).pw_uid
+
+    # use the os module to change the owner of the file
+    os.chown(file_path, new_owner_uid, -1)
+
     print(f"A file {name} has been added to the ftp server successfully")
 
-    # i = 0
-    # if size / 1000 == 0:
-    #     loops = size / 1000
-    # else:
-    #     loops = size / 1000 + 1
-    #
-    # while True:
-    #     packet = sniff(filter=filename_filter, count=1)
-    #     x = packet.haslayer(UDP)
-    #     print(x)
-    #     if packet.haslayer(UDP):
-    #         # Extract the data from the packet
-    #         data = packet[0].load.decode()
-    #         print(data)
-    #         i = i+1
-    #         if len(data) < 1000 and (i != loops):
-    #             request = Ether(src=mac, dst=mac) / \
-    #                       (IP(src=AP_IP, dst=CLIENP_IP) /
-    #                        UDP(sport=src_port, dport=dest_port) /
-    #                        "nack")
-    #             i = i-1
-    #             time.sleep(1)
-    #             sendp(request, iface=IFACE)
-    #         else:
-    #             file.write(data)
-    #             request = Ether(src=mac, dst=mac) / \
-    #                       (IP(src=AP_IP, dst=CLIENP_IP) /
-    #                        UDP(sport=src_port, dport=dest_port) /
-    #                        "ack")
-    #             time.sleep(1)
-    #             sendp(request, iface=IFACE)
-    #         if i == loops:
-    #             file.close()
-    #             break
 
 
 def get():
-    # Gets the name of the file to upload
+    # Gets the name of the file to download
     file_name = sniff(filter=filename_filter, count=1)
     name = file_name[0].load.decode()
     while os.path.exists("ftp_file/" + name)==False:
@@ -109,6 +96,27 @@ def get():
     sendp(packet, iface=IFACE)
     print("The file has been download successfully.")
 
+def ls():
+    # Set the path to the directory containing the files
+    directory_path = "ftp_file"
+
+
+    # Get a list of all the file names in the directory
+    file_names = os.listdir(directory_path)
+
+    # Sort the list of file names alphabetically
+    sorted_file_names = sorted(file_names)
+    sorted_file_names_string = ', '.join(sorted_file_names)
+
+
+    # Create the TCP packet with the file data as the payload
+    packet = Ether(src=mac, dst=mac) / \
+             IP(src=AP_IP, dst=CLIENP_IP) / \
+             UDP(sport=src_port, dport=dest_port) / \
+             sorted_file_names_string
+    time.sleep(1)
+    sendp(packet, iface=IFACE)
+    print("The files has been sent to shown successfully.")
 
 
 
@@ -116,7 +124,7 @@ def get():
 
 
 # Define a callback function to extract the filename from the packet
-def extract_filename(pkt):
+def extract_wahttodo(pkt):
     print("packet catch")
     # Gets from the client what he wants to do
     what_todo = pkt[0].load.decode()
@@ -140,8 +148,15 @@ def extract_filename(pkt):
         time.sleep(1)
         sendp(request, iface=IFACE)
         get()
-    # else:
-    # ls()
+    else:
+        # Sends the client a confirmation that he when to see the file
+        request = Ether(src=pkt[Ether].dst, dst=pkt[Ether].src) / \
+                  (IP(src=pkt[IP].dst, dst=pkt[IP].src) /
+                   UDP(sport=pkt[UDP].dport, dport=pkt[UDP].sport) /
+                   "ack")
+        time.sleep(1)
+        sendp(request, iface=IFACE)
+        ls()
 
     # Start sniffing for incoming packets
     # sniff(filter=f"udp and src {RECEIVER_IP} and dst {listen_ip} and port {dest_port}", prn=get)
@@ -149,4 +164,4 @@ def extract_filename(pkt):
 
 # Start sniffing for what to do(put\get\ls)
 print("my_ftp server is online.....")
-sniff(filter=filename_filter, prn=extract_filename)
+sniff(filter=filename_filter, prn=extract_wahttodo)

@@ -1,3 +1,5 @@
+import pwd
+
 from scapy.all import *
 from scapy.layers.dhcp import DHCP, BOOTP
 from scapy.layers.dns import DNS, DNSQR, DNSRR
@@ -15,68 +17,68 @@ AP_IP = "10.0.0.18"
 domain_name = "www.my_ftp.com"  # input("Enter the desired domain name: ")  # domain name to query
 mac = "7e:b1:37:1c:4b:d4"  # The mac address
 
-#
-# def get_ips(packet):
-#     print("dhcp offer chath!!!")
-#     global CLIENP_IP
-#     global DHCP_IP
-#     global DNS_IP
-#     CLIENP_IP = packet[BOOTP].yiaddr
-#     DHCP_IP = packet[BOOTP].siaddr
-#     DNS_IP = packet[DHCP].options[2][1]
-#
-#
-# def get_ip_domain(packet):
-#     global AP_IP
-#     AP_IP = packet[DNSRR][0].rdata
-#     print(f"The  ip is : {AP_IP}")
-#     print(f"Sent DNS response for {domain_name}: {AP_IP}")
-#
-#
-# # Set up DHCP discover packet
-# dhcp_discover = Ether(dst='ff:ff:ff:ff:ff:ff') / \
-#                 IP(src='0.0.0.0', dst='255.255.255.255') / \
-#                 UDP(sport=68, dport=67) / \
-#                 BOOTP() / \
-#                 DHCP(options=[('message-type', 'discover'), 'end'])
-#
-# # Send DHCP discover
-# time.sleep(1)
-# sendp(dhcp_discover, iface=IFACE)
-#
-# # Sniff for DHCP Offer response and pulls out the ips
-# sniff(filter="udp and port 67", prn=get_ips, count=1, iface=IFACE)
-#
-# # Set up DHCP request packet
-# dhcp_request = Ether(dst='ff:ff:ff:ff:ff:ff') / \
-#                IP(src='0.0.0.0', dst='255.255.255.255') / \
-#                UDP(sport=68, dport=67) / \
-#                BOOTP() / \
-#                DHCP(options=[('message-type', 'request'), 'end'])
-#
-# # Send DHCP request
-# time.sleep(1)
-# sendp(dhcp_request, iface=IFACE)
-#
-# # Sniff for DHCP ack response
-# dhcp_ack = sniff(filter="udp and (port 67)", count=1)
-#
-# print(f"your ip is : {CLIENP_IP}")
-# print(f"The DHCP server ip is : {DHCP_IP}")
-# print(f"The DNS ip is : {DNS_IP}")
-#
-# # create DNS request packet
-#
-# dns_query = Ether(dst=mac, src=mac) / \
-#             IP(dst=DNS_IP, src=CLIENP_IP) / \
-#             UDP(dport=53, sport=5353) / \
-#             DNS(rd=1, qd=DNSQR(qname=domain_name, qtype=1))
-#
-# # send DNS request packet and receive response
-# time.sleep(1)
-# sendp(dns_query, iface=IFACE, verbose=2)
-#
-# sniff(filter="udp and port 5353", prn=get_ip_domain, timeout=5, count=1)
+
+def get_ips(packet):
+    print("dhcp offer chath!!!")
+    global CLIENP_IP
+    global DHCP_IP
+    global DNS_IP
+    CLIENP_IP = packet[BOOTP].yiaddr
+    DHCP_IP = packet[BOOTP].siaddr
+    DNS_IP = packet[DHCP].options[2][1]
+
+
+def get_ip_domain(packet):
+    global AP_IP
+    AP_IP = packet[DNSRR][0].rdata
+    print(f"The  ip is : {AP_IP}")
+    print(f"Sent DNS response for {domain_name}: {AP_IP}")
+
+
+# Set up DHCP discover packet
+dhcp_discover = Ether(dst='ff:ff:ff:ff:ff:ff') / \
+                IP(src='0.0.0.0', dst='255.255.255.255') / \
+                UDP(sport=68, dport=67) / \
+                BOOTP() / \
+                DHCP(options=[('message-type', 'discover'), 'end'])
+
+# Send DHCP discover
+time.sleep(1)
+sendp(dhcp_discover, iface=IFACE)
+
+# Sniff for DHCP Offer response and pulls out the ips
+sniff(filter="udp and port 67", prn=get_ips, count=1, iface=IFACE)
+
+# Set up DHCP request packet
+dhcp_request = Ether(dst='ff:ff:ff:ff:ff:ff') / \
+               IP(src='0.0.0.0', dst='255.255.255.255') / \
+               UDP(sport=68, dport=67) / \
+               BOOTP() / \
+               DHCP(options=[('message-type', 'request'), 'end'])
+
+# Send DHCP request
+time.sleep(1)
+sendp(dhcp_request, iface=IFACE)
+
+# Sniff for DHCP ack response
+dhcp_ack = sniff(filter="udp and (port 67)", count=1)
+
+print(f"your ip is : {CLIENP_IP}")
+print(f"The DHCP server ip is : {DHCP_IP}")
+print(f"The DNS ip is : {DNS_IP}")
+
+# create DNS request packet
+
+dns_query = Ether(dst=mac, src=mac) / \
+            IP(dst=DNS_IP, src=CLIENP_IP) / \
+            UDP(dport=53, sport=5353) / \
+            DNS(rd=1, qd=DNSQR(qname=domain_name, qtype=1))
+
+# send DNS request packet and receive response
+time.sleep(1)
+sendp(dns_query, iface=IFACE, verbose=2)
+
+sniff(filter="udp and port 5353", prn=get_ip_domain, timeout=5, count=1)
 
 src_port = 30663
 dest_port = 20027
@@ -87,7 +89,23 @@ choice = input("(0) to exit\n"
                "Enter what you want to do: ")
 while choice != "0":
     if choice == "1":
-        print("1")
+        # Sending to the server I want to upload a file
+        request = Ether(src=mac, dst=mac) / \
+                  (IP(src=CLIENP_IP, dst=AP_IP) /
+                   UDP(sport=src_port, dport=dest_port) /
+                   "ls")
+        time.sleep(1)
+        sendp(request, iface=IFACE)
+
+        reply = sniff(filter="udp and udp src port 20027", count=1)
+        ack_nack = reply[0][Raw].load.decode()
+        if (ack_nack == "ack"):
+            packet = sniff(filter="udp and udp src port 20027", count=1, timeout=5)[0]
+            # Put in file_data the contents of the file
+            files_names = packet[0].load.decode()
+            print(f"The files inside the ftp server are:\n{files_names}")
+
+
     if choice == "2":
         # Sending to the server I want to upload a file
         request = Ether(src=mac, dst=mac) / \
@@ -131,37 +149,6 @@ while choice != "0":
                      Raw(load=file_data)
             time.sleep(1)
             sendp(packet, iface=IFACE)
-
-            # # Split the file data into chunks of 1000 bytes
-            # data_chunks = [file_data[i:i + 1000] for i in range(0, len(file_data), 1000)]
-            # # Send each packet and handle retransmissions
-            # for packet in data_chunks:
-            #     response = None
-            #     while response is None:
-            #         # Send the packet and wait for a response
-            #         chunk = Ether(src=mac, dst=mac) / \
-            #                 (IP(src=CLIENP_IP, dst=AP_IP) /
-            #                  UDP(sport=src_port, dport=dest_port) /
-            #                  packet)
-            #         time.sleep(1)
-            #         sendp(chunk, iface=IFACE)
-            #         response = sniff(filter="udp and udp src port 20027", count=1)
-            #         ackNack = response[0].load.decode()
-            #
-            #         if ackNack == "nack":
-            #             # No response received, retransmit the packet
-            #             print("Retransmitting packet...")
-            #             response = None
-            #         else:
-            #             # Response received, check for errors
-            #             if response.haslayer(ICMP):
-            #                 # Packet was lost, retransmit
-            #                 print("Packet lost, retransmitting...")
-            #                 response = None
-            #             elif response.haslayer(UDP) and ackNack == "ack":
-            #                 # Packet was received correctly, move on to the next packet
-            #                 break
-
             print("The file has been uploaded successfully.")
 
     if choice == "3":
@@ -212,6 +199,25 @@ while choice != "0":
             f = open("client_file/" + file_to_download, "wb")
             f.write(file_data)
             f.close()
+
+            # set the path of the file you want to change the permissions of
+            file_path = "client_file/" + file_to_download
+
+            # set the desired permissions for the file (in octal format)
+            # for example, 0o644 means read-write for owner, read-only for group and others
+            new_permissions = 0o777
+
+            # use the os module to change the permissions of the file
+            os.chmod(file_path, new_permissions)
+            # set the username of the new owner of the file
+            new_owner = 'nisim'
+
+            # get the uid of the new owner
+            new_owner_uid = pwd.getpwnam(new_owner).pw_uid
+
+            # use the os module to change the owner of the file
+            os.chown(file_path, new_owner_uid, -1)
+
             print(f"A file {file_to_download} has been added to the ftp server successfully")
 
     choice = input("(0) to exit\n"
