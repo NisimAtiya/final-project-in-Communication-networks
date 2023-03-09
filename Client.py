@@ -14,7 +14,7 @@ CLIENP_IP = "10.0.0.13"
 DNS_IP = "10.0.0.12"
 DHCP_IP = "10.0.0.11"
 AP_IP = "10.0.0.18"
-domain_name = "www.my_ftp.com"  # input("Enter the desired domain name: ")  # domain name to query
+domain_name = input("Enter the desired domain name: ")  # domain name to query
 mac = "7e:b1:37:1c:4b:d4"  # The mac address
 
 
