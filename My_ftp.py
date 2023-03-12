@@ -12,7 +12,7 @@ mac = "7e:b1:37:1c:4b:d4"  # The mac address
 AP_IP = "10.0.0.18"
 src_port = 20027
 dest_port = 30663
-IFACE = "enp0s1"  # network name
+IFACE = socket.if_nameindex()[1][1]  # network name
 CLIENP_IP = "10.0.0.13"
 # Define a filter for the filename packet
 filename_filter = "udp and udp src port 30663"
@@ -49,7 +49,7 @@ def put():
     os.chmod(file_path, new_permissions)
 
     # set the username of the new owner of the file
-    new_owner = 'nisim'
+    new_owner = socket.getfqdn().split('.')[0]
 
     # get the uid of the new owner
     new_owner_uid = pwd.getpwnam(new_owner).pw_uid

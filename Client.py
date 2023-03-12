@@ -9,7 +9,7 @@ import time
 import os
 from scapy.layers.inet import fragment
 
-IFACE = "enp0s1"  # network name
+IFACE = socket.if_nameindex()[1][1]  # network name
 CLIENP_IP = "10.0.0.13"
 DNS_IP = "10.0.0.12"
 DHCP_IP = "10.0.0.11"
@@ -210,7 +210,7 @@ while choice != "0":
             # use the os module to change the permissions of the file
             os.chmod(file_path, new_permissions)
             # set the username of the new owner of the file
-            new_owner = 'nisim'
+            new_owner = socket.getfqdn().split('.')[0]
 
             # get the uid of the new owner
             new_owner_uid = pwd.getpwnam(new_owner).pw_uid

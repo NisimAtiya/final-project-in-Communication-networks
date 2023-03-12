@@ -8,7 +8,7 @@ import time
 DHCP_IP = "10.0.0.11"
 CLIENT_IP = "10.0.0.13"
 DNS_IP = "10.0.0.12"
-IFACE = "enp0s1"  # network name
+IFACE = socket.if_nameindex()[1][1]  # network name
 
 
 def handle_dhcp_request(packet):

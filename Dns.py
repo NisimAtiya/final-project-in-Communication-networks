@@ -5,7 +5,7 @@ from scapy.layers.inet import IP, UDP
 from scapy.layers.l2 import Ether
 import time
 
-IFACE = "enp0s1"  # network name
+IFACE = socket.if_nameindex()[1][1]  # network name
 
 # Dictionary to hold the DNS mappings
 dns_cache = {
