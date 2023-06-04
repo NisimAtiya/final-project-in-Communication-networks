@@ -51,3 +51,6 @@ FTP is a standard protocol used for transferring files over the Internet. It all
 5. Connection Termination: After the file transfer is complete, the client can close the connection to the server by sending a request to terminate the connection. The server responds with confirmation, and the connection is closed.
 
 FTP can be secured using encryption, such as FTPS (FTP over SSL) or SFTP (Secure File Transfer Protocol), to protect the transmission of sensitive information. However, FTP has limitations, including vulnerabilities to eavesdropping and data tampering during file transfer. It may not be suitable for transferring large files at high rates or frequently transferring many small files.
+
+### Conclusion
+The communication system developed for this project combines the functionalities of DNS, DHCP, and FTP servers. It enables clients to automatically obtain IP addresses and network configuration information using DHCP, resolve domain names to IP addresses using DNS, and transfer files to/from the FTP server. By integrating these protocols, the system provides a comprehensive solution for network communication, IP address management, and file transfer within a network environment.
